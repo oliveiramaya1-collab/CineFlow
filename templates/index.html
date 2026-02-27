@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlow - Home</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .search-area {
+            display: flex;
+            flex-direction: column; 
+            gap: 15px;
+            width: 100%;
+        }
+
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+        }
+
+        .search-form {
+            flex-grow: 1;
+        }
+
+        /* Botão de busca/limpar */
+        .search-btn {
+            position: absolute; 
+            right: 10px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background:none; 
+            border:none; 
+            cursor:pointer;
+            font-size: 1.2rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* --- ESTILOS DO CARROSSEL --- */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #000;
+            border: 2px solid var(--border-color);
+        }
+
+        .carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.4);
+            display: block;
+        }
+
+        .carousel-caption {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+            z-index: 10;
+        }
+
+        .carousel-caption h1 {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .carousel-caption p {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            padding: 20px 15px;
+            cursor: pointer;
+            z-index: 20;
+            font-size: 2rem;
+            transition: 0.3s;
+        }
+
+        .carousel-button:hover { background: rgba(0, 0, 0, 0.8); }
+        .btn-prev { left: 0; border-radius: 0 10px 10px 0; }
+        .btn-next { right: 0; border-radius: 10px 0 0 10px; }
+
+        @media (max-width: 768px) {
+            .carousel-container { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="container">
+        <div class="header-top">
+            <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow</h1></a>
+            <div class="header-controls">
+                <button id="themeButton" class="theme-toggle">☀️ Modo Claro</button>
+            </div>
+        </div>
+
+        <nav class="search-area">
+            <div class="nav-row">
+                <form action="/" method="get" class="search-form" style="position: relative;">
+                    <input type="text" name="search" id="searchInput" placeholder="Pesquisar filmes..." autocomplete="off" style="width: 100%;" value="{{ request.args.get('search', '') }}">
+                    
+                    {% if request.args.get('search') %}
+                        <a href="/" class="search-btn">✖</a>
+                    {% else %}
+                        <button type="submit" class="search-btn">🔍</button>
+                    {% endif %}
+
+                    <div id="suggestions" class="suggestions-dropdown"></div>
+                </form>
+                
+                <div class="nav-buttons">
+                    <a href="/minha-lista" class="btn-nav">📋 Minha Lista</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% if recomendados and not request.args.get('search') %}
+        <section class="carousel-container">
+            <ul class="carousel-track" id="track">
+                {% for movie in recomendados %}
+                <li class="carousel-slide">
+                    <a href="/movie/{{ movie.id }}">
+                        <img src="https://image.tmdb.org/t/p/original{{ movie.backdrop_path }}" alt="{{ movie.title }}">
+                        <div class="carousel-caption">
+                            <h1>{{ movie.title }}</h1>
+                            <p>⭐ DESTAQUES DA SEMANA</p>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <button class="carousel-button btn-prev" id="prevBtn">❮</button>
+            <button class="carousel-button btn-next" id="nextBtn">❯</button>
+        </section>
+        {% endif %}
+
+        <section class="movie-grid" id="movieGrid">
+            {% for filme in filmes %}
+            <div class="movie-card">
+                <a href="/movie/{{ filme.id }}">
+                    <img src="https://image.tmdb.org/t/p/w500{{ filme.poster_path }}" alt="{{ filme.title }}">
+                    <div class="movie-info">
+                        <h3>{{filme.title}}</h3>
+                        <span>{{filme.ano}}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </section>
+
+        <div id="loader" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            Carregando mais filmes...
+        </div>
+    </main>
+
+    <script>
+        // --- Lógica de Tema ---
+        const themeButton = document.getElementById('themeButton');
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeButton.innerText = "🌙 Modo Escuro";
+        }
+        themeButton.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            let theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+            themeButton.innerText = theme === 'light' ? "🌙 Modo Escuro" : "☀️ Modo Claro";
+            localStorage.setItem('theme', theme);
+        });
+
+        // --- Lógica do Carrossel ---
+        const track = document.getElementById('track');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        if (track && track.children.length > 0) {
+            let index = 0;
+            const slides = track.children;
+            function move() {
+                if (index >= slides.length) index = 0;
+                if (index < 0) index = slides.length - 1;
+                track.style.transform = `translateX(-${index * 100}%)`;
+            }
+            nextBtn.addEventListener('click', () => { index++; move(); });
+            prevBtn.addEventListener('click', () => { index--; move(); });
+            setInterval(() => { index++; move(); }, 5000);
+        }
+
+        // --- Lógica de Autocomplete ---
+        const searchInput = document.getElementById('searchInput');
+        const suggestions = document.getElementById('suggestions');
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value;
+            if (query.length > 2) {
+                fetch(`/api/filmes?search=${query}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        suggestions.innerHTML = '';
+                        if(data.filmes) {
+                            data.filmes.slice(0, 5).forEach(f => {
+                                const div = document.createElement('div');
+                                div.className = 'suggestion-item';
+                                div.innerText = f.title;
+                                div.onclick = () => { window.location.href = `/movie/${f.id}`; };
+                                suggestions.appendChild(div);
+                            });
+                        }
+                    });
+            } else { suggestions.innerHTML = ''; }
+        });
+
+        // --- Lógica de Infinite Scroll ---
+        let page = 2; 
+        let loading = false;
+        let hasMore = true;
+        const movieGrid = document.getElementById('movieGrid');
+        const loader = document.getElementById('loader');
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('search')) {
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !loading && hasMore) {
+                    loading = true;
+                    fetch(`/api/filmes?page=${page}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.filmes && data.filmes.length > 0) {
+                                data.filmes.forEach(filme => {
+                                    const card = document.createElement('div');
+                                    card.className = 'movie-card';
+                                    card.innerHTML = `<a href="/movie/${filme.id}"><img src="https://image.tmdb.org/t/p/w500${filme.poster_path}"><div class="movie-info"><h3>${filme.title}</h3><span>${filme.ano}</span></div></a>`;
+                                    movieGrid.appendChild(card);
+                                });
+                                page++; loading = false;
+                            } else { hasMore = false; loader.innerText = "Fim da lista"; }
+                        }).catch(() => { loading = false; });
+                }
+            }, { rootMargin: '300px' });
+            observer.observe(loader);
+        } else { loader.style.display = 'none'; }
+    </script>
+</body>
+</html>

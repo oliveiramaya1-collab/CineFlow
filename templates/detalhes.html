@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlow - {{ filme.title }}</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items:center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .search-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        /* --- Estilo do Toast (Notificação Bonitinha) --- */
+        #toast {
+            visibility: hidden;
+            min-width: 280px;
+            background-color: var(--accent);
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            right: 30px;
+            bottom: 30px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            transition: transform 0.4s, opacity 0.4s, visibility 0.4s;
+            opacity: 0;
+        }
+
+        #toast.show {
+            visibility: visible;
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast"></div>
+
+    <header class="container">
+        <div class="header-top">
+            <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow</h1></a>
+            <div class="header-controls">
+                <button id="themeButton" class="theme-toggle">☀️ Modo Claro</button>
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+
+        <nav class="search-area">
+            <div class="nav-buttons">
+                <a href="javascript:history.back()" class="btn-nav">↩ Voltar</a>
+                <a href="/minha-lista" class="btn-nav">📋 Minha Lista</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container">
+        <section class="detalhes-wrapper">
+            
+            <div class="poster-container">
+                {% if filme.poster_path and filme.poster_path != 'None' %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ filme.poster_path }}" alt="{{ filme.title }}" class="poster-img" onerror="this.src='/static/img/poster-placeholder.png';">
+                {% else %}
+                    <img src="/static/img/poster-placeholder.png" alt="Pôster não disponível" class="poster-img">
+                {% endif %}
+                
+                <button onclick="adicionarMinhaLista()" class="btn-favorito">
+                    ⭐ Adicionar à Minha Lista
+                </button>
+            </div>
+
+            <div class="info-container">
+                <div class="info-box">
+                    <p><strong>Nome do Filme:</strong> {{ filme.title }}</p>
+                </div>
+                
+                <div class="info-row">
+                    <div class="info-box">
+                        <p><strong>Ano:</strong> {{ filme.ano }}</p>
+                    </div>
+                    <div class="info-box">
+                        <p><strong>Duração:</strong> {{ filme.duracao_formatada }}</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>Direção:</strong> {{ diretor }}</p>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>Gênero:</strong> {{ generos }}</p>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>Elenco Principal:</strong> {{ elenco | join(', ') }}</p>
+                </div>
+
+                <div class="sinopse-container">
+                    <h3>Sinopse</h3>
+                    <p>{{ filme.overview if filme.overview else "Sinopse não disponível para este título." }}</p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // Função para mostrar a notificação bonitinha
+        function showToast(mensagem, cor = null) {
+            const toast = document.getElementById("toast");
+            toast.innerText = mensagem;
+            if (cor) toast.style.backgroundColor = cor;
+            
+            toast.className = "show";
+            
+            setTimeout(() => { 
+                toast.className = toast.className.replace("show", ""); 
+            }, 3000);
+        }
+
+        function adicionarMinhaLista() {
+            const filme = {
+                id: "{{ filme.id }}",
+                title: "{{ filme.title }}",
+                poster_path: "{{ filme.poster_path }}",
+                ano: "{{ filme.ano }}"
+            };
+
+            let lista = JSON.parse(localStorage.getItem('minhaLista')) || [];
+
+            if (!lista.find(f => f.id === filme.id)) {
+                lista.push(filme);
+                localStorage.setItem('minhaLista', JSON.stringify(lista));
+                showToast("🎬 " + filme.title + " adicionado!");
+            } else {
+                showToast("Este filme já está na sua lista.", "#ffb703");
+            }
+        }
+
+        // Lógica de Tema
+        const themeButton = document.getElementById('themeButton');
+        const body = document.body;
+
+        if (localStorage.getItem('theme') === 'light') {
+            body.classList.add('light-theme');
+            themeButton.innerText = "🌙 Modo Escuro";
+        }
+
+        themeButton.addEventListener('click', () => {
+            body.classList.toggle('light-theme');
+            if (body.classList.contains('light-theme')) {
+                localStorage.setItem('theme', 'light');
+                themeButton.innerText = "🌙 Modo Escuro";
+            } else {
+                localStorage.setItem('theme', 'dark');
+                themeButton.innerText = "☀️ Modo Claro";
+            }
+        });
+    </script>
+</body>
+</html>

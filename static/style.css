@@ -1,0 +1,356 @@
+/* --- Design System: Dark & Minimalist --- */
+:root {
+    /* Tema Escuro (Padrão) */
+    --bg-body: #0d1117;
+    --card-bg: #161b22;
+    --primary: #f0f6fc;
+    --accent: #2f81f7;
+    --text-muted: #8b949e;
+    --border-color: #30363d;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --radius: 12px;
+}
+
+body.light-theme {
+    /* Tema Claro */
+    --bg-body: #f6f8fa;
+    --card-bg: #ffffff;
+    --primary: #1f2328;
+    --accent: #0969da;
+    --text-muted: #636c76;
+    --border-color: #d0d7de;
+}
+
+/* --- Reset e Base --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--primary);
+    line-height: 1.6;
+    padding: 40px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* --- Header --- */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header-top h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+/* --- Botão de Tema Aprimorado --- */
+.theme-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--primary);
+    padding: 10px 20px;
+    border-radius: 50px; /* Formato pilula */
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(47, 129, 247, 0.2);
+    background: var(--border-color);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+}
+
+/* Efeito sutil de brilho ao redor do botão no modo claro */
+body.light-theme .theme-toggle {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Busca e Navegação --- */
+.search-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.search-form {
+    flex: 1;
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    padding: 4px 20px;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.search-form:focus-within {
+    border-color: var(--accent);
+}
+
+.search-form input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--primary);
+    padding: 10px;
+    width: 100%;
+    font-size: 0.95rem;
+}
+
+.btn-nav {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 12px 24px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    transition: var(--transition);
+}
+
+.btn-nav:hover {
+    border-color: var(--accent);
+    background: rgba(47, 129, 247, 0.1);
+}
+
+/* --- Carrossel / Destaque (Ajustado) --- */
+.carousel-container {
+    width: 100%;
+    height: 380px;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 50px;
+    position: relative;
+}
+
+.carousel-container a {
+    text-decoration: none; /* Link não explícito no carrossel */
+    color: inherit;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.4; /* Mais escuro para destacar o texto centralizado */
+}
+
+.carousel-caption {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centralização absoluta */
+    text-align: center;
+    width: 80%;
+}
+
+.carousel-caption h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: var(--primary);
+}
+
+.carousel-caption p {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* --- Grid e CARDS (Centralizados e Discretos) --- */
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 25px;
+}
+
+.movie-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.movie-card a {
+    text-decoration: none; /* Link não explícito */
+    color: inherit;
+    display: block;
+}
+
+.movie-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+.movie-card img {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.movie-info {
+    padding: 15px;
+    text-align: center; /* Título centralizado */
+}
+
+.movie-info h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.movie-info span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* --- Botão de remover na Minha Lista --- */
+.btn-remover {
+    color: #f85149;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.75rem;
+    margin-top: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+/* --- Detalhes do Filme (Conforme Wireframe) --- */
+.detalhes-wrapper {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 40px;
+}
+
+.poster-img {
+    width: 100%;
+    border-radius: 20px;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.info-box {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 12px;
+}
+
+.info-box strong {
+    color: var(--accent);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.info-box p {
+    font-weight: 500;
+}
+
+.sinopse-container {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 25px;
+    margin-top: 20px;
+}
+
+.btn-favorito {
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 16px;
+    border-radius: var(--radius);
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: var(--transition);
+}
+
+.btn-favorito:hover {
+    background: var(--accent);
+    color: white;
+}
+
+/* --- Sugestões Autocomplete --- */
+.suggestions-dropdown {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    width: 100%;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.suggestion-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary);
+}
+
+.suggestion-item:hover {
+    background: rgba(47, 129, 247, 0.1);
+    color: var(--accent);
+}
+
+/* --- Responsividade --- */
+@media (max-width: 850px) {
+    .detalhes-wrapper { grid-template-columns: 1fr; }
+    .poster-container { max-width: 300px; margin: 0 auto; }
+    .carousel-caption h2 { font-size: 1.8rem; }
+}

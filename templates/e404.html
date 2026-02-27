@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlow - Página não encontrada</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .error-illustration {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-weight: bold;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-back:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="{{ 'light-theme' if request.cookies.get('theme') == 'light' else '' }}">
+
+    <header class="container">
+        <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow</h1></a>
+    </header>
+
+    <main class="container">
+        <div class="error-container">
+            <div class="error-illustration">🎬🍿</div>
+            <h1 class="error-code">404</h1>
+            <p class="error-message">Ops! Parece que este filme saiu de cartaz ou a página não existe.</p>
+            <a href="/" class="btn-back">Voltar para o Início</a>
+        </div>
+    </main>
+
+    <script>
+        // Mantendo a preferência de tema na página de erro
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    </script>
+</body>
+</html>

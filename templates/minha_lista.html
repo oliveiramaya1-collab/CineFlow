@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>CineFlow - Minha Lista</title>
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+
+    <header class="container">
+        <div class="header-top">
+            <h1>CineFlow</h1>
+            <button id="themeButton" class="theme-toggle">☀️ Modo Claro</button>
+        </div>
+        <nav class="search-area">
+            <h2>Minha Lista</h2>
+            <a href="/" class="btn-nav">↩ Home</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="movie-grid" id="listaFavoritos">
+            </section>
+        
+        <div id="listaVazia" style="display:none; text-align:center; margin-top: 50px;">
+            <p>Sua lista está vazia. Adicione alguns filmes!</p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('listaFavoritos');
+            const avisoVazio = document.getElementById('listaVazia');
+            const lista = JSON.parse(localStorage.getItem('minhaLista')) || [];
+
+            if (lista.length === 0) {
+                avisoVazio.style.display = 'block';
+                return;
+            }
+
+            lista.forEach(filme => {
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                card.innerHTML = `
+                    <a href="/movie/${filme.id}">
+                        <img src="https://image.tmdb.org/t/p/w500${filme.poster_path}" alt="${filme.title}">
+                        <div class="movie-info">
+                            <h3>${filme.title}</h3>
+                            <button onclick="removerItem('${filme.id}')" style="color:red; border:none; background:none; cursor:pointer; margin-top:5px;">[Remover]</button>
+                        </div>
+                    </a>
+                `;
+                grid.appendChild(card);
+            });
+        });
+
+        function removerItem(id) {
+            event.preventDefault(); // Impede de abrir os detalhes ao clicar em remover
+            let lista = JSON.parse(localStorage.getItem('minhaLista')) || [];
+            lista = lista.filter(f => f.id !== id);
+            localStorage.setItem('minhaLista', JSON.stringify(lista));
+            location.reload(); // Recarrega a página para atualizar o grid
+        }
+
+        const themeButton = document.getElementById('themeButton');
+        const body = document.body;
+
+        // Verifica se o usuário já tinha uma preferência salva
+        if (localStorage.getItem('theme') === 'light') {
+            body.classList.add('light-theme');
+            themeButton.innerText = "🌙 Modo Escuro";
+        }
+
+        themeButton.addEventListener('click', () => {
+            body.classList.toggle('light-theme');
+            
+            if (body.classList.contains('light-theme')) {
+                localStorage.setItem('theme', 'light');
+                themeButton.innerText = "🌙 Modo Escuro";
+            } else {
+                localStorage.setItem('theme', 'dark');
+                themeButton.innerText = "☀️ Modo Claro";
+            }
+        });
+    </script>
+</body>
+</html>
