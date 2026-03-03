@@ -1,5 +1,6 @@
 import os
 import requests
+import random
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
@@ -148,6 +149,56 @@ def quiz_recomendacao():
         return jsonify({"filmes": filmes})
     except Exception as e:
         return jsonify({"error": str(e), "filmes": []}), 500
+    
+import random
+
+@app.route('/game')
+def game():
+    return render_template('game.html')
+
+@app.route('/api/game/questoes')
+def api_game_questoes():
+    """ 
+    Busca uma lista grande de filmes (60 itens) de páginas aleatórias
+    para evitar que o usuário veja sempre os mesmos filmes.
+    """
+    todas_questoes = []
+    # Sorteia 3 páginas aleatórias entre as 15 primeiras do TMDB
+    paginas_aleatorias = random.sample(range(1, 15), 8) 
+    
+    filmes_pool = []
+    for pg in paginas_aleatorias:
+        try:
+            res = requests.get(f"{BASE_URL}/movie/popular", 
+                               params={"api_key": API_KEY, "language": LANGUAGE, "page": pg})
+            if res.status_code == 200:
+                filmes_pool.extend(res.json().get('results', []))
+        except:
+            continue
+
+    # Embaralha a lista global para não vir na ordem de popularidade
+    random.shuffle(filmes_pool)
+    
+    for filme in filmes_pool:
+        # Filtra filmes sem imagem de fundo ou sem título
+        if not filme.get('backdrop_path') or not filme.get('title'):
+            continue
+            
+        # Gera 3 opções erradas pegando títulos aleatórios de outros filmes do pool
+        outros_titulos = [f['title'] for f in filmes_pool if f['id'] != filme['id']]
+        opcoes_erradas = random.sample(outros_titulos, 3)
+        
+        opcoes = opcoes_erradas + [filme['title']]
+        random.shuffle(opcoes)
+        
+        todas_questoes.append({
+            "id": filme['id'],
+            "imagem": f"https://image.tmdb.org/t/p/original{filme['backdrop_path']}",
+            "resposta": filme['title'],
+            "opcoes": opcoes
+        })
+    
+    return jsonify(todas_questoes)
 
 #Rota do ERRO 404
 @app.errorhandler(404)

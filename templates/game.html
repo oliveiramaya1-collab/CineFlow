@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineFlow - Movie Challenge</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        /* --- Estilos do Jogo --- */
+        .timer-badge {
+            background: var(--card-bg);
+            border: 2px solid var(--accent);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent);
+            box-shadow: 0 4px 15px rgba(47, 129, 247, 0.2);
+        }
+
+        .game-img-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            border: 4px solid var(--border-color);
+            background: #000;
+        }
+
+        .game-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .game-options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .btn-quiz-option {
+            background: var(--card-bg);
+            color: var(--primary);
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .wrong-answer {
+            animation: shake 0.4s ease-in-out;
+            border-color: #ff4b4b !important;
+            background: rgba(255, 75, 75, 0.1) !important;
+            color: #ff4b4b;
+        }
+
+        .correct-answer {
+            border-color: #2ea043 !important;
+            background: rgba(46, 160, 67, 0.1) !important;
+            color: #2ea043;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* --- Modais Estilizados --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none; /* Alterado via JS */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            padding: 30px;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- Ranking --- */
+        .ranking-table {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+
+        .ranking-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Mensagem de Ranking Vazio Centralizada */
+        .ranking-empty-msg {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .btn-reset-ranking {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.75rem;
+            text-decoration: underline;
+            transition: var(--transition);
+            opacity: 0.7;
+        }
+
+        .btn-reset-ranking:hover {
+            color: #ff4b4b;
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .game-options-grid { grid-template-columns: 1fr; }
+            .game-img-container { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="container">
+        <div class="header-top">
+            <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow <span style="color:var(--accent)">GAME</span></h1></a>
+            <div id="stats" class="timer-badge">Menu</div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="game-menu" class="sinopse-container" style="text-align: center;">
+            <h2>Desafio CineFlow</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Teste seus conhecimentos sobre cinema!</p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="startGame('time')" class="btn-favorito">⏱️ 60 Segundos</button>
+                <button onclick="startGame('fixed')" class="btn-favorito">🎯 15 Perguntas</button>
+            </div>
+            
+            <div style="margin-top: 40px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <h3 style="margin: 0;">🏆 Ranking</h3>
+                    <button id="btn-reset-link" onclick="abrirModalReset()" class="btn-reset-ranking" style="display: none;">Limpar Ranking</button>
+                </div>
+                <div id="ranking-container">
+                    <table class="ranking-table" id="ranking-body"></table>
+                </div>
+            </div>
+        </section>
+
+        <section id="game-play" style="display: none;">
+            <div class="game-img-container">
+                <img id="movie-guess-img" class="game-img" src="" alt="Qual é o filme?">
+            </div>
+            <div id="game-options" class="game-options-grid"></div>
+        </section>
+    </main>
+
+    <div id="modal-fim-jogo" class="modal-overlay">
+        <div class="modal-content sinopse-container">
+            <h2>Fim de Jogo! 🎬</h2>
+            <p id="modal-score-texto" style="margin-top: 10px;">Sua pontuação final foi: <strong>0</strong></p>
+            <div style="margin: 25px 0; text-align: left;">
+                <label for="player-name" style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem;">Seu nome para o Ranking:</label>
+                <input type="text" id="player-name" maxlength="15" placeholder="Digite seu nome..." 
+                       style="width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--primary); outline: none;">
+            </div>
+            <button onclick="salvarERecarregar()" class="btn-favorito" style="margin: 0; width: 100%;">Salvar Pontuação</button>
+        </div>
+    </div>
+
+    <div id="modal-reset-ranking" class="modal-overlay">
+        <div class="modal-content sinopse-container">
+            <h2 style="color: #ff4b4b;">Zerar Ranking? ⚠️</h2>
+            <p style="margin: 15px 0; color: var(--text-muted);">Essa ação não pode ser desfeita. Todos os recordes serão apagados.</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="fecharModalReset()" class="btn-nav" style="flex: 1; margin: 0; background-color: rgb(85, 85, 215);">Cancelar</button>
+                <button onclick="confirmarResetRanking()" class="btn-favorito" style="flex: 1; margin: 0; background: #ffffff;">Sim, Apagar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mode = ''; 
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let filmesUsados = new Set(); 
+
+        async function carregarNovasQuestoes() {
+            const res = await fetch('/api/game/questoes');
+            const novosDados = await res.json();
+            return novosDados.filter(q => !filmesUsados.has(q.id));
+        }
+
+        async function startGame(chosenMode) {
+            mode = chosenMode;
+            filmesUsados.clear();
+            score = 0; currentIndex = 0; timeLeft = 60;
+            document.getElementById('stats').innerText = "Carregando...";
+            questions = await carregarNovasQuestoes();
+            document.getElementById('game-menu').style.display = 'none';
+            document.getElementById('game-play').style.display = 'block';
+            if(mode === 'time') startTimer();
+            renderQuestion();
+        }
+
+        function startTimer() {
+            document.getElementById('stats').innerText = `⏳ ${timeLeft}s`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('stats').innerText = `⏳ ${timeLeft}s`;
+                if(timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        async function renderQuestion() {
+            if (currentIndex >= questions.length) {
+                const extras = await carregarNovasQuestoes();
+                questions = questions.concat(extras);
+            }
+            if (mode === 'fixed' && filmesUsados.size >= 15) {
+                endGame(); return;
+            }
+            const q = questions[currentIndex];
+            filmesUsados.add(q.id);
+            document.getElementById('movie-guess-img').src = q.imagem;
+            const optionsDiv = document.getElementById('game-options');
+            optionsDiv.innerHTML = '';
+            if(mode === 'fixed') document.getElementById('stats').innerText = `🎯 ${filmesUsados.size}/15`;
+            q.opcoes.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-quiz-option';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(btn, opt, q.resposta);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedBtn, chosen, correct) {
+            const buttons = document.querySelectorAll('.btn-quiz-option');
+            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            if(chosen === correct) {
+                score += 10;
+                selectedBtn.classList.add('correct-answer');
+            } else {
+                selectedBtn.classList.add('wrong-answer');
+                buttons.forEach(btn => { if(btn.innerText === correct) btn.classList.add('correct-answer'); });
+            }
+            setTimeout(() => { currentIndex++; renderQuestion(); }, 1100);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('modal-score-texto').innerHTML = `Pontuação final: <strong style="color: var(--accent); font-size: 1.5rem;">${score}</strong>`;
+            document.getElementById('modal-fim-jogo').style.display = 'flex';
+            setTimeout(() => document.getElementById('player-name').focus(), 100);
+        }
+
+        function salvarERecarregar() {
+            const name = document.getElementById('player-name').value.trim() || "Anônimo";
+            const ranking = JSON.parse(localStorage.getItem('cineflow_ranking') || '[]');
+            ranking.push({ name, points: score, mode: mode });
+            ranking.sort((a, b) => b.points - a.points);
+            localStorage.setItem('cineflow_ranking', JSON.stringify(ranking.slice(0, 5)));
+            location.reload();
+        }
+
+        /* --- Lógica dos Modais de Reset --- */
+        function abrirModalReset() { document.getElementById('modal-reset-ranking').style.display = 'flex'; }
+        function fecharModalReset() { document.getElementById('modal-reset-ranking').style.display = 'none'; }
+        
+        function confirmarResetRanking() {
+            localStorage.removeItem('cineflow_ranking');
+            fecharModalReset();
+            loadRanking();
+        }
+
+        function loadRanking() {
+            const ranking = JSON.parse(localStorage.getItem('cineflow_ranking') || '[]');
+            const table = document.getElementById('ranking-body');
+            const btnReset = document.getElementById('btn-reset-link');
+
+            if (ranking.length > 0) {
+                btnReset.style.display = 'block';
+                table.innerHTML = ranking.map(r => `
+                    <tr>
+                        <td><strong>${r.name}</strong></td>
+                        <td>${r.mode === 'time' ? '⏱️' : '🎯'}</td>
+                        <td style="text-align: right;">${r.points} pts</td>
+                    </tr>
+                `).join('');
+            } else {
+                btnReset.style.display = 'none';
+                table.innerHTML = `<tr><td class="ranking-empty-msg">Nenhum recorde ainda. Que tal ser o primeiro?</td></tr>`;
+            }
+        }
+
+        document.getElementById('player-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') salvarERecarregar();
+        });
+
+        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+        window.onload = loadRanking;
+    </script>
+</body>
+</html>
