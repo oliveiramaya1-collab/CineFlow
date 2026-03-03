@@ -348,6 +348,134 @@ body.light-theme .theme-toggle {
     color: var(--accent);
 }
 
+/* ==========================================================================
+   ESTILOS DO QUIZ - CINEFLOW PREMIUM
+   ========================================================================== */
+
+/* Container de Progresso */
+.quiz-progress-container {
+    width: 100%;
+    height: 10px;
+    background: var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.quiz-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #58a6ff);
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Texto do contador (ex: 1/15) */
+#contador-perguntas {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 25px;
+}
+
+/* Título da Pergunta */
+#pergunta-texto {
+    font-size: 1.8rem;
+    line-height: 1.3;
+    background: linear-gradient(to right, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 30px !important;
+}
+
+/* Container de Opções */
+#opcoes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 550px;
+    margin: 0 auto;
+    perspective: 1000px; /* Para efeito 3D suave */
+}
+
+/* Botões de Opção */
+.btn-quiz-option {
+    width: 100%;
+    padding: 20px 25px;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    color: var(--primary);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 500;
+    text-align: left;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito de hover "Premium" */
+.btn-quiz-option:hover {
+    border-color: var(--accent);
+    background: rgba(47, 129, 247, 0.1);
+    transform: translateX(10px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Pequeno indicador visual no hover */
+.btn-quiz-option::before {
+    content: '→';
+    position: absolute;
+    left: -20px;
+    opacity: 0;
+    transition: var(--transition);
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.btn-quiz-option:hover::before {
+    left: 8px;
+    opacity: 1;
+}
+
+/* Botão de Reset/Refazer */
+.btn-reset-quiz {
+    background: var(--card-bg);
+    color: var(--primary);
+    border: 2px solid var(--accent);
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-reset-quiz:hover {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px rgba(47, 129, 247, 0.4);
+}
+
+/* Animação de entrada das perguntas */
+#quiz-game {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* --- Responsividade --- */
 @media (max-width: 850px) {
     .detalhes-wrapper { grid-template-columns: 1fr; }

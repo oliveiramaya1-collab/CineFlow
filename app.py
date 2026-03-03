@@ -119,6 +119,36 @@ def minha_lista():
     """ Rota para a página de favoritos (gerida pelo LocalStorage no navegador) """
     return render_template('minha_lista.html')
 
+@app.route('/quiz')
+def quiz():
+    """ Rota para a página do quiz """
+    return render_template('quiz.html')
+
+@app.route('/api/quiz/recomendacao')
+def quiz_recomendacao():
+    """ 
+    Gera recomendação baseada no gênero mais votado.
+    O parâmetro 'genero' é o ID do TMDB.
+    """
+    genero_id = request.args.get('genero')
+    params = {
+        "api_key": API_KEY,
+        "language": LANGUAGE,
+        "sort_by": "popularity.desc",
+        "with_genres": genero_id,
+        "page": 1
+    }
+    
+    try:
+        res = requests.get(f"{BASE_URL}/discover/movie", params=params)
+        res.raise_for_status()
+        dados = res.json()
+        # Retornamos os 6 filmes com maior popularidade desse gênero
+        filmes = [tratar_filme(f) for f in dados.get('results', [])[:10]]
+        return jsonify({"filmes": filmes})
+    except Exception as e:
+        return jsonify({"error": str(e), "filmes": []}), 500
+
 #Rota do ERRO 404
 @app.errorhandler(404)
 def pagina_não_encontrada(error):
