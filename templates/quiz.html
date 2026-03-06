@@ -3,153 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineFlow - Quiz de Filmes</title>
+    <title>CineFlow - Quiz Personalizado</title>
     <link rel="stylesheet" href="../static/style.css">
+    <style>
+        :root {
+            --accent-glow: rgba(47, 129, 247, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        .quiz-container { max-width: 1100px; margin: 0 auto; text-align: center; padding: 20px; }
+        
+        /* --- ESTILOS DO QUIZ --- */
+        .question-card { background: var(--card-bg); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border-color); }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+        .btn-quiz { 
+            padding: 20px; border-radius: var(--radius); border: 1px solid var(--border-color);
+            background: var(--card-bg); color: var(--primary); cursor: pointer; transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .btn-quiz:hover { border-color: var(--accent); background: rgba(47, 129, 247, 0.1); transform: translateY(-2px); }
+
+        /* --- RESULTADOS REESTILIZADOS --- */
+        .results-group { margin-bottom: 60px; text-align: left; opacity: 0; animation: fadeInUp 0.8s forwards; }
+
+        /* Container de Elite (Top 5) */
+        .top-recommendations-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Brilho de fundo no topo */
+        .top-recommendations-box::after {
+            content: ''; position: absolute; top: -50px; left: -50px; width: 200px; height: 200px;
+            background: var(--accent); filter: blur(120px); opacity: 0.15; z-index: 0;
+        }
+
+        .group-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .group-title span { color: var(--accent); }
+
+        .grid-5-columns {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* CARD DE FILME ESTILIZADO */
+        .movie-card-quiz {
+            background: #161b22;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Efeito de Destaque no Top 5 */
+        .top-match-card {
+            border: 1px solid rgba(47, 129, 247, 0.5);
+            box-shadow: 0 0 0 rgba(47, 129, 247, 0);
+        }
+
+        .top-match-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            border-color: var(--accent);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--accent-glow);
+        }
+
+        .poster-wrapper { position: relative; width: 100%; aspect-ratio: 2/3; }
+        
+        .movie-card-quiz img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Badge de Match % */
+        .match-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: var(--accent); color: white;
+            padding: 4px 8px; border-radius: 6px;
+            font-size: 0.7rem; font-weight: 900;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .info { padding: 15px; background: #161b22; }
+        .info h3 { 
+            font-size: 0.9rem; margin: 0 0 5px 0; color: #f0f6fc;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .info span { font-size: 0.75rem; color: #8b949e; font-weight: 500; }
+
+        .btn-nav {
+            background-color: transparent; 
+            border: 1px solid var(--border-color); 
+            color: var(--primary);
+        }
+
+        /* Animações */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 950px) {
+            .grid-5-columns { grid-template-columns: repeat(3, 1fr); }
+            .top-recommendations-box { padding: 20px; }
+        }
+
+        @media (max-width: 600px) {
+            .grid-5-columns { grid-template-columns: repeat(2, 1fr); }
+            .group-title { font-size: 1.3rem; }
+        }
+    </style>
 </head>
 <body>
     <header class="container">
         <div class="header-top">
-            <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow</h1></a>
-            <button id="themeButton" class="theme-toggle">☀️ Modo Claro</button>
+            <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow <span style="color:var(--accent)">QUIZ</span></h1></a>
+            <a href="/" class="btn-nav">↩ Sair</a>
         </div>
-        <nav class="nav-row">
-            <a href="/" class="btn-nav">↩ Voltar para Home</a>
-        </nav>
     </header>
 
-    <main class="container">
-        <div id="quiz-progress-wrapper" style="display: none; margin-top: 20px;">
-            <div class="quiz-progress-container">
-                <div class="quiz-progress-bar" id="barra-interna"></div>
-            </div>
-            <p id="contador-perguntas" style="text-align: center; font-size: 0.8rem; color: var(--text-muted);"></p>
-        </div>
-
-        <section id="quiz-intro" class="sinopse-container" style="text-align: center;">
-            <h2>O que vamos assistir hoje?</h2>
-            <p>Responda 15 perguntas rápidas para uma recomendação personalizada.</p>
-            <button onclick="iniciarQuiz()" class="btn-favorito" style="max-width: 300px; margin: 20px auto;">Começar Quiz</button>
+    <main class="container quiz-container">
+        <section id="intro" class="question-card">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🔮</div>
+            <h2>Análise de Perfil</h2>
+            <p style="color: var(--text-muted); margin: 15px 0;">Responda às 20 questões para que o nosso sistema identifique o seu padrão de entretenimento.</p>
+            <button class="btn-favorito" onclick="startQuiz()" style="width: 100%; padding: 20px;">Começar Perfilamento</button>
         </section>
 
-        <section id="quiz-game" style="display: none;">
-            <div class="info-box" style="text-align: center;">
-                <h2 id="pergunta-texto" style="margin-bottom: 20px;"></h2>
-                <div id="opcoes-container"></div>
+        <section id="quiz-ui" style="display: none;">
+            <div class="progress-bar"><div id="progress" class="progress-inner"></div></div>
+            <div class="question-card">
+                <p id="counter" style="font-size: 0.8rem; color: var(--accent); font-weight: bold; letter-spacing: 1px;"></p>
+                <h2 id="question-text" style="margin: 20px 0; font-size: 1.5rem;"></h2>
+                <div id="options" class="options-grid"></div>
             </div>
         </section>
 
-        <section id="quiz-resultado" style="display: none;">
-            <h2 style="text-align: center; margin-bottom: 20px;">Filmes que combinam com você:</h2>
-            <div class="movie-grid" id="grid-recomendados"></div>
-            <div style="text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                <button onclick="location.reload()" class="btn-reset-quiz">Refazer Quiz</button>
-                <a href="/" class="btn-nav" style="padding: 12px 24px; display: flex; align-items: center;">Ir para Home</a>
+        <section id="results" style="display: none;">
+            
+            <div class="results-group top-recommendations-box">
+                <div class="group-title"><span>✦</span> Melhores Combinações</div>
+                <div id="grid-top" class="grid-5-columns"></div>
             </div>
+
+            <div class="results-group" style="animation-delay: 0.3s;">
+                <div class="group-title" style="font-size: 1.3rem; opacity: 0.7;">Outras Recomendações</div>
+                <div id="grid-secondary" class="grid-5-columns"></div>
+            </div>
+            
+            <button class="btn-nav" onclick="location.reload()" style="margin-bottom: 50px;">Refazer Diagnóstico</button>
         </section>
     </main>
 
     <script>
-        const perguntas = [
-            { q: "Como está seu humor agora?", opcoes: [{t: "Quero rir muito", g: "35"}, {t: "Estou reflexivo(a)", g: "18"}, {t: "Muita adrenalina!", g: "28"}, {t: "Quero aprender algo", g: "99"}] },
-            { q: "Qual cenário você prefere?", opcoes: [{t: "Futuro tecnológico", g: "878"}, {t: "Mundos mágicos", g: "14"}, {t: "Cidades reais", g: "878"}, {t: "O Velho Oeste", g: "37"}] },
-            { q: "Quem seria você no filme?", opcoes: [{t: "O herói destemido", g: "28"}, {t: "O detetive sagaz", g: "9648"}, {t: "O par romântico", g: "10749"}, {t: "O alívio cômico", g: "35"}] },
-            { q: "O que te dá mais medo?", opcoes: [{t: "Assombrações", g: "27"}, {t: "Psicopatas", g: "53"}, {t: "Solidão", g: "18"}, {t: "Nada me assusta", g: "12"}] },
-            { q: "Escolha uma cor dominante:", opcoes: [{t: "Vermelho Sangue", g: "27"}, {t: "Azul Neon", g: "878"}, {t: "Amarelo Vibrante", g: "35"}, {t: "Verde Floresta", g: "12"}] },
-            { q: "Sua trilha sonora ideal é:", opcoes: [{t: "Músicas pop/vibrantes", g: "10402"}, {t: "Orquestra épica", g: "12"}, {t: "Silêncio e tensão", g: "53"}, {t: "Rock pesado", g: "28"}] },
-            { q: "Qual sua relação com finais?", opcoes: [{t: "Final feliz sempre", g: "10749"}, {t: "Reviravolta chocante", g: "9648"}, {t: "Final triste/realista", g: "18"}, {t: "Final com explosão", g: "28"}] },
-            { q: "Escolha um companheiro:", opcoes: [{t: "Um robô", g: "878"}, {t: "Um cavalo", g: "37"}, {t: "Um cachorro", g: "16"}, {t: "Um melhor amigo", g: "35"}] },
-            { q: "O que você prefere ler?", opcoes: [{t: "Contos de fadas", g: "14"}, {t: "Biografias", g: "99"}, {t: "Investigação policial", g: "9648"}, {t: "HQs de ação", g: "28"}] },
-            { q: "Como seria seu encontro ideal?", opcoes: [{t: "Jantar à luz de velas", g: "10749"}, {t: "Parque de diversões", g: "16"}, {t: "Escape room tenso", g: "53"}, {t: "Maratona de séries", g: "35"}] },
-            { q: "Qual superpoder você queria?", opcoes: [{t: "Voar livremente", g: "12"}, {t: "Ler mentes", g: "9648"}, {t: "Magia", g: "14"}, {t: "Força bruta", g: "28"}] },
-            { q: "Escolha um objeto:", opcoes: [{t: "Uma lupa", g: "9648"}, {t: "Uma espada", g: "14"}, {t: "Uma nave", g: "878"}, {t: "Uma câmera", g: "99"}] },
-            { q: "O que te faz chorar?", opcoes: [{t: "Histórias de amor", g: "10749"}, {t: "Injustiça social", g: "99"}, {t: "Superação", g: "18"}, {t: "Nada, sou forte", g: "53"}] },
-            { q: "Um passatempo:", opcoes: [{t: "Dançar", g: "10402"}, {t: "Explorar lugares", g: "12"}, {t: "Jogar videogame", g: "878"}, {t: "Cozinhar", g: "10749"}] },
-            { q: "Sua frase favorita seria:", opcoes: [{t: "A vida é bela", g: "35"}, {t: "A verdade está lá fora", g: "9648"}, {t: "Ao infinito e além", g: "16"}, {t: "Sobreviva", g: "27"}] }
+        const questions = [
+            { q: "Qual é a sua vibe principal hoje?", opts: [{t:"Adrenalina e Explosão", g:"28"}, {t:"Rir até chorar", g:"35"}, {t:"Reflexão Profunda", g:"18"}, {t:"Tensão e Mistério", g:"53"}] },
+            { q: "Se você pudesse viajar no tempo, para onde iria?", opts: [{t:"Para o futuro tecnológico", g:"878"}, {t:"Para a era dos castelos e magia", g:"14"}, {t:"Para um evento histórico real", g:"36"}, {t:"Para o velho oeste", g:"37"}] },
+            { q: "O que não pode faltar em um bom filme?", opts: [{t:"Cenas de luta épicas", g:"28"}, {t:"Um romance inesquecível", g:"10749"}, {t:"Sustos de pular da cadeira", g:"27"}, {t:"Um crime para resolver", g:"80"}] },
+            { q: "Qual dessas artes mais te encanta?", opts: [{t:"Desenhos e Animações", g:"16"}, {t:"Grandes Musicais", g:"10402"}, {t:"Documentários reais", g:"99"}, {t:"Histórias de guerra", g:"10752"}] },
+            { q: "Como prefere o ritmo da história?", opts: [{t:"Frenético", g:"28"}, {t:"Lento e focado", g:"18"}, {t:"Leve e familiar", g:"10751"}, {t:"Cheio de reviravoltas", g:"9648"}] },
+            { q: "Escolha um cenário para aventura:", opts: [{t:"Floresta encantada", g:"12"}, {t:"Delegacia de polícia", g:"80"}, {t:"Nave espacial", g:"878"}, {t:"Casa mal-assombrada", g:"27"}] },
+            { q: "Quem seria você no filme?", opts: [{t:"O herói", g:"28"}, {t:"O engraçado", g:"35"}, {t:"O estrategista", g:"9648"}, {t:"O romântico", g:"10749"}] },
+            { q: "Maior interesse pessoal:", opts: [{t:"Inteligência Artificial", g:"878"}, {t:"Drama humano", g:"18"}, {t:"Mente criminosa", g:"80"}, {t:"Mitologia", g:"14"}] },
+            { q: "Com quem vai assistir?", opts: [{t:"Família", g:"10751"}, {t:"Encontro romântico", g:"10749"}, {t:"Amigos", g:"35"}, {t:"Sozinho", g:"27"}] },
+            { q: "O que te faz desligar a TV?", opts: [{t:"Tédio/Lentidão", g:"28"}, {t:"Infantilidade", g:"18"}, {t:"Furos no roteiro", g:"9648"}, {t:"Medo excessivo", g:"35"}] },
+            { q: "Elemento visual favorito:", opts: [{t:"Cores vibrantes", g:"16"}, {t:"Sombras e mistério", g:"53"}, {t:"Explosões", g:"28"}, {t:"Natureza", g:"12"}] },
+            { q: "Tema fascinante:", opts: [{t:"Conspirações", g:"9648"}, {t:"Superação", g:"18"}, {t:"Alienígenas", g:"878"}, {t:"Vingança", g:"80"}] },
+            { q: "Final ideal?", opts: [{t:"Feliz", g:"10751"}, {t:"Realista/Triste", g:"18"}, {t:"Gancho/Aberto", g:"28"}, {t:"Inesperado", g:"9648"}] },
+            { q: "Nostalgia preferida:", opts: [{t:"Anos 80/90", g:"35"}, {t:"Medieval", g:"14"}, {t:"Cyberpunk", g:"878"}, {t:"Guerras Mundiais", g:"10752"}] },
+            { q: "Traço do protagonista:", opts: [{t:"Super-poderes", g:"14"}, {t:"Força física", g:"28"}, {t:"QI elevado", g:"9648"}, {t:"Bom coração", g:"35"}] },
+            { q: "Sentimento pós-filme?", opts: [{t:"Motivado", g:"18"}, {t:"Leve", g:"35"}, {t:"Eufórico", g:"28"}, {t:"Impactado", g:"53"}] },
+            { q: "Sua vida seria:", opts: [{t:"Comédia Romântica", g:"10749"}, {t:"Drama cult", g:"18"}, {t:"Aventura", g:"12"}, {t:"Suspense", g:"53"}] },
+            { q: "Maior medo?", opts: [{t:"Fantasmas", g:"27"}, {t:"Assaltos", g:"80"}, {t:"Desastres", g:"53"}, {t:"Solidão", g:"18"}] },
+            { q: "Trilha sonora ideal?", opts: [{t:"Clássica", g:"18"}, {t:"Pop/Rock", g:"10402"}, {t:"Eletrônica", g:"878"}, {t:"Ambiental", g:"53"}] },
+            { q: "Objetivo de hoje?", opts: [{t:"Diversão", g:"28"}, {t:"Cultura", g:"99"}, {t:"Emoção", g:"10749"}, {t:"Fugir do mundo", g:"14"}] }
         ];
 
-        let perguntaAtual = 0;
-        let pontuacao = {};
+        let current = 0;
+        let votes = {};
 
-        function iniciarQuiz() {
-            document.getElementById('quiz-intro').style.display = 'none';
-            document.getElementById('quiz-progress-wrapper').style.display = 'block';
-            document.getElementById('quiz-game').style.display = 'block';
-            mostrarPergunta();
+        function startQuiz() {
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('quiz-ui').style.display = 'block';
+            showQuestion();
         }
 
-        function mostrarPergunta() {
-            const p = perguntas[perguntaAtual];
-            document.getElementById('pergunta-texto').innerText = p.q;
+        function showQuestion() {
+            const q = questions[current];
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('counter').innerText = `STEP ${current + 1} / 20`;
+            document.getElementById('progress').style.width = ((current + 1) / 20 * 100) + "%";
             
-            // Barra de Progresso
-            const pct = ((perguntaAtual + 1) / perguntas.length) * 100;
-            document.getElementById('barra-interna').style.width = pct + '%';
-            document.getElementById('contador-perguntas').innerText = `Pergunta ${perguntaAtual + 1} de ${perguntas.length}`;
-
-            const container = document.getElementById('opcoes-container');
+            const container = document.getElementById('options');
             container.innerHTML = '';
-            
-            p.opcoes.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'btn-quiz-option';
-                btn.innerText = opt.t;
-                btn.onclick = () => responder(opt.g);
-                container.appendChild(btn);
+            q.opts.forEach(o => {
+                const b = document.createElement('button');
+                b.className = 'btn-quiz';
+                b.innerText = o.t;
+                b.onclick = () => {
+                    votes[o.g] = (votes[o.g] || 0) + 1;
+                    current++;
+                    if(current < 20) showQuestion(); else finish();
+                };
+                container.appendChild(b);
             });
         }
 
-        function responder(genero) {
-            pontuacao[genero] = (pontuacao[genero] || 0) + 1;
-            perguntaAtual++;
-            if (perguntaAtual < perguntas.length) {
-                mostrarPergunta();
-            } else {
-                finalizarQuiz();
-            }
-        }
-
-        function finalizarQuiz() {
-            document.getElementById('quiz-game').style.display = 'none';
-            document.getElementById('quiz-progress-wrapper').style.display = 'none';
-            document.getElementById('quiz-resultado').style.display = 'block';
-
-            // Ordena gêneros e pega os 2 mais votados
-            const ordenados = Object.keys(pontuacao).sort((a, b) => pontuacao[b] - pontuacao[a]);
-            const g1 = ordenados[0];
-            const g2 = ordenados[1] ? `,${ordenados[1]}` : "";
-
-            fetch(`/api/quiz/recomendacao?genero=${g1}${g2}`)
+        function finish() {
+            document.getElementById('quiz-ui').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            const winner = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b);
+            
+            fetch(`/api/quiz/recomendacao?genero=${winner}`)
                 .then(res => res.json())
                 .then(data => {
-                    const grid = document.getElementById('grid-recomendados');
-                    grid.innerHTML = '';
-                    if(data.filmes.length === 0) {
-                        grid.innerHTML = "<p>Nenhum filme encontrado. Tente novamente!</p>";
-                        return;
-                    }
-                    data.filmes.forEach(f => {
-                        const card = document.createElement('div');
-                        card.className = 'movie-card';
-                        card.innerHTML = `
-                            <a href="/movie/${f.id}">
-                                <img src="https://image.tmdb.org/t/p/w500${f.poster_path}">
-                                <div class="movie-info">
-                                    <h3>${f.title}</h3>
-                                    <span>${f.ano}</span>
-                                </div>
-                            </a>`;
-                        grid.appendChild(card);
-                    });
+                    const gridTop = document.getElementById('grid-top');
+                    const gridSecondary = document.getElementById('grid-secondary');
+                    
+                    const top5 = data.filmes.slice(0, 5);
+                    const rest5 = data.filmes.slice(5, 10);
+
+                    const createCard = (f, isTop) => `
+                        <a href="/movie/${f.id}" class="movie-card-quiz ${isTop ? 'top-match-card' : ''}">
+                            <div class="poster-wrapper">
+                                ${isTop ? '<div class="match-badge">99% MATCH</div>' : ''}
+                                <img src="https://image.tmdb.org/t/p/w500${f.poster_path}" alt="${f.title}">
+                            </div>
+                            <div class="info">
+                                <h3>${f.title}</h3>
+                                <span>${f.ano}</span>
+                            </div>
+                        </a>
+                    `;
+
+                    gridTop.innerHTML = top5.map(f => createCard(f, true)).join('');
+                    gridSecondary.innerHTML = rest5.map(f => createCard(f, false)).join('');
                 });
         }
-
-        // Script de Tema (CineFlow)
-        const themeButton = document.getElementById('themeButton');
-        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
-        themeButton.addEventListener('click', () => {
-            document.body.classList.toggle('light-theme');
-            localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-        });
     </script>
 </body>
 </html>

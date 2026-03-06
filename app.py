@@ -61,7 +61,7 @@ def index():
 def api_filmes():
     """
     Rota de API: Usada pelo JavaScript para Pesquisa Instantânea 
-    e Rolagem Infinita (Infinite Scroll). Retorna apenas JSON.
+    e Rolagem Infinita.
     """
     page = request.args.get('page', 1, type=int)
     query = request.args.get('search')
@@ -79,7 +79,6 @@ def api_filmes():
         res.raise_for_status()
         dados = res.json()
         
-        # Formata os filmes antes de enviar para o JavaScript
         filmes = [tratar_filme(f) for f in dados.get('results', [])]
         return jsonify({"filmes": filmes})
     except Exception as e:
@@ -87,9 +86,7 @@ def api_filmes():
 
 @app.route('/movie/<int:movie_id>')
 def detalhes(movie_id):
-    """
-    Rota de Detalhes: Busca informações técnicas, elenco e direção.
-    """
+    """ Rota de Detalhes: Busca informações técnicas, elenco e direção. """
     endpoint = f"{BASE_URL}/movie/{movie_id}"
     params = {
         "api_key": API_KEY, 
@@ -103,7 +100,6 @@ def detalhes(movie_id):
         
     dados = res.json()
     
-    # Lógica para Diretor e Elenco
     equipe = dados.get('credits', {}).get('crew', [])
     diretor = next((p['name'] for p in equipe if p['job'] == 'Director'), "Não disponível")
     elenco = [ator['name'] for ator in dados.get('credits', {}).get('cast', [])[:5]]
@@ -117,20 +113,14 @@ def detalhes(movie_id):
 
 @app.route('/minha-lista')
 def minha_lista():
-    """ Rota para a página de favoritos (gerida pelo LocalStorage no navegador) """
     return render_template('minha_lista.html')
 
 @app.route('/quiz')
 def quiz():
-    """ Rota para a página do quiz """
     return render_template('quiz.html')
 
 @app.route('/api/quiz/recomendacao')
 def quiz_recomendacao():
-    """ 
-    Gera recomendação baseada no gênero mais votado.
-    O parâmetro 'genero' é o ID do TMDB.
-    """
     genero_id = request.args.get('genero')
     params = {
         "api_key": API_KEY,
@@ -144,13 +134,10 @@ def quiz_recomendacao():
         res = requests.get(f"{BASE_URL}/discover/movie", params=params)
         res.raise_for_status()
         dados = res.json()
-        # Retornamos os 6 filmes com maior popularidade desse gênero
         filmes = [tratar_filme(f) for f in dados.get('results', [])[:10]]
         return jsonify({"filmes": filmes})
     except Exception as e:
         return jsonify({"error": str(e), "filmes": []}), 500
-    
-import random
 
 @app.route('/game')
 def game():
@@ -159,12 +146,12 @@ def game():
 @app.route('/api/game/questoes')
 def api_game_questoes():
     """ 
-    Busca uma lista grande de filmes (60 itens) de páginas aleatórias
-    para evitar que o usuário veja sempre os mesmos filmes.
+    Busca uma lista maior de filmes de páginas aleatórias para suportar
+    o novo sistema de combos e dificuldade elevada.
     """
     todas_questoes = []
-    # Sorteia 3 páginas aleatórias entre as 15 primeiras do TMDB
-    paginas_aleatorias = random.sample(range(1, 15), 8) 
+    # Aumentado para 8 páginas aleatórias para maior diversidade
+    paginas_aleatorias = random.sample(range(1, 20), 8) 
     
     filmes_pool = []
     for pg in paginas_aleatorias:
@@ -176,15 +163,12 @@ def api_game_questoes():
         except:
             continue
 
-    # Embaralha a lista global para não vir na ordem de popularidade
     random.shuffle(filmes_pool)
     
     for filme in filmes_pool:
-        # Filtra filmes sem imagem de fundo ou sem título
         if not filme.get('backdrop_path') or not filme.get('title'):
             continue
             
-        # Gera 3 opções erradas pegando títulos aleatórios de outros filmes do pool
         outros_titulos = [f['title'] for f in filmes_pool if f['id'] != filme['id']]
         opcoes_erradas = random.sample(outros_titulos, 3)
         
@@ -200,16 +184,13 @@ def api_game_questoes():
     
     return jsonify(todas_questoes)
 
-#Rota do ERRO 404
 @app.errorhandler(404)
 def pagina_não_encontrada(error):
     return render_template('e404.html')
 
-# Rota do ERRO 500
 @app.errorhandler(500)
 def erro_de_servidor(error):
     return render_template('e500.html')
 
 if __name__ == '__main__':
-    # Rodar o app em modo debug para facilitar o desenvolvimento
     app.run(debug=True)

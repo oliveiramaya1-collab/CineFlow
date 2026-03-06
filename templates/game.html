@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineFlow - Movie Challenge</title>
+    <title>CineFlow - Movie Challenge Extreme</title>
     <link rel="stylesheet" href="../static/style.css">
     <style>
         /* --- Estilos do Jogo --- */
@@ -16,6 +16,14 @@
             font-weight: 800;
             color: var(--accent);
             box-shadow: 0 4px 15px rgba(47, 129, 247, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        /* Feedback visual de erro no tempo */
+        .time-penalty {
+            color: #ff4b4b !important;
+            border-color: #ff4b4b !important;
+            animation: shake 0.3s ease;
         }
 
         .game-img-container {
@@ -29,11 +37,28 @@
             background: #000;
         }
 
+        /* Efeito de Dificuldade: Blur Progressivo */
         .game-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
+            filter: blur(25px); /* Começa muito difícil */
+        }
+
+        /* Badge de Combo */
+        #combo-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
         .game-options-grid {
@@ -73,13 +98,13 @@
             75% { transform: translateX(10px); }
         }
 
-        /* --- Modais Estilizados --- */
+        /* --- Modais --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85);
-            display: none; /* Alterado via JS */
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 2000;
@@ -99,7 +124,6 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        /* --- Ranking --- */
         .ranking-table {
             width: 100%;
             margin-top: 10px;
@@ -111,7 +135,6 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        /* Mensagem de Ranking Vazio Centralizada */
         .ranking-empty-msg {
             text-align: center;
             padding: 40px 0;
@@ -126,13 +149,7 @@
             cursor: pointer;
             font-size: 0.75rem;
             text-decoration: underline;
-            transition: var(--transition);
             opacity: 0.7;
-        }
-
-        .btn-reset-ranking:hover {
-            color: #ff4b4b;
-            opacity: 1;
         }
 
         @media (max-width: 600px) {
@@ -152,7 +169,7 @@
     <main class="container">
         <section id="game-menu" class="sinopse-container" style="text-align: center;">
             <h2>Desafio CineFlow</h2>
-            <p style="color: var(--text-muted); margin-bottom: 25px;">Teste seus conhecimentos sobre cinema!</p>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">O nível aumentou! Cuidado com o tempo e o foco.</p>
             
             <div style="display: flex; gap: 15px; justify-content: center;">
                 <button onclick="startGame('time')" class="btn-favorito">⏱️ 60 Segundos</button>
@@ -172,6 +189,7 @@
 
         <section id="game-play" style="display: none;">
             <div class="game-img-container">
+                <div id="combo-badge">Combo x1</div>
                 <img id="movie-guess-img" class="game-img" src="" alt="Qual é o filme?">
             </div>
             <div id="game-options" class="game-options-grid"></div>
@@ -181,23 +199,21 @@
     <div id="modal-fim-jogo" class="modal-overlay">
         <div class="modal-content sinopse-container">
             <h2>Fim de Jogo! 🎬</h2>
-            <p id="modal-score-texto" style="margin-top: 10px;">Sua pontuação final foi: <strong>0</strong></p>
+            <p id="modal-score-texto" style="margin-top: 10px;">Sua pontuação: <strong>0</strong></p>
             <div style="margin: 25px 0; text-align: left;">
-                <label for="player-name" style="display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem;">Seu nome para o Ranking:</label>
-                <input type="text" id="player-name" maxlength="15" placeholder="Digite seu nome..." 
-                       style="width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--primary); outline: none;">
+                <input type="text" id="player-name" maxlength="15" placeholder="Seu nome..." 
+                       style="width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-body); color: var(--primary);">
             </div>
-            <button onclick="salvarERecarregar()" class="btn-favorito" style="margin: 0; width: 100%;">Salvar Pontuação</button>
+            <button onclick="salvarERecarregar()" class="btn-favorito" style="margin: 0; width: 100%;">Salvar</button>
         </div>
     </div>
 
     <div id="modal-reset-ranking" class="modal-overlay">
         <div class="modal-content sinopse-container">
             <h2 style="color: #ff4b4b;">Zerar Ranking? ⚠️</h2>
-            <p style="margin: 15px 0; color: var(--text-muted);">Essa ação não pode ser desfeita. Todos os recordes serão apagados.</p>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="fecharModalReset()" class="btn-nav" style="flex: 1; margin: 0; background-color: rgb(85, 85, 215);">Cancelar</button>
-                <button onclick="confirmarResetRanking()" class="btn-favorito" style="flex: 1; margin: 0; background: #ffffff;">Sim, Apagar</button>
+                <button onclick="fecharModalReset()" class="btn-nav" style="flex: 1; margin: 0; background: #555;">Cancelar</button>
+                <button onclick="confirmarResetRanking()" class="btn-favorito" style="flex: 1; margin: 0;">Confirmar</button>
             </div>
         </div>
     </div>
@@ -209,6 +225,7 @@
         let score = 0;
         let timeLeft = 60;
         let timerInterval;
+        let combo = 0;
         let filmesUsados = new Set(); 
 
         async function carregarNovasQuestoes() {
@@ -220,8 +237,8 @@
         async function startGame(chosenMode) {
             mode = chosenMode;
             filmesUsados.clear();
-            score = 0; currentIndex = 0; timeLeft = 60;
-            document.getElementById('stats').innerText = "Carregando...";
+            score = 0; currentIndex = 0; timeLeft = 60; combo = 0;
+            document.getElementById('stats').innerText = "Iniciando...";
             questions = await carregarNovasQuestoes();
             document.getElementById('game-menu').style.display = 'none';
             document.getElementById('game-play').style.display = 'block';
@@ -230,10 +247,11 @@
         }
 
         function startTimer() {
-            document.getElementById('stats').innerText = `⏳ ${timeLeft}s`;
+            const stats = document.getElementById('stats');
+            stats.innerText = `⏳ ${timeLeft}s`;
             timerInterval = setInterval(() => {
                 timeLeft--;
-                document.getElementById('stats').innerText = `⏳ ${timeLeft}s`;
+                stats.innerText = `⏳ ${timeLeft}s`;
                 if(timeLeft <= 0) endGame();
             }, 1000);
         }
@@ -246,12 +264,28 @@
             if (mode === 'fixed' && filmesUsados.size >= 15) {
                 endGame(); return;
             }
+
             const q = questions[currentIndex];
             filmesUsados.add(q.id);
-            document.getElementById('movie-guess-img').src = q.imagem;
+            
+            const imgElement = document.getElementById('movie-guess-img');
+            
+            // Reset do Blur para cada nova questão
+            imgElement.style.transition = 'none';
+            imgElement.style.filter = 'blur(25px)';
+            imgElement.src = q.imagem;
+            
+            // Inicia o foco gradual (5 segundos para ficar nítido)
+            setTimeout(() => {
+                imgElement.style.transition = 'filter 5.5s linear';
+                imgElement.style.filter = 'blur(0px)';
+            }, 50);
+
             const optionsDiv = document.getElementById('game-options');
             optionsDiv.innerHTML = '';
+            
             if(mode === 'fixed') document.getElementById('stats').innerText = `🎯 ${filmesUsados.size}/15`;
+            
             q.opcoes.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'btn-quiz-option';
@@ -263,22 +297,40 @@
 
         function checkAnswer(selectedBtn, chosen, correct) {
             const buttons = document.querySelectorAll('.btn-quiz-option');
+            const statsEl = document.getElementById('stats');
             buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            
             if(chosen === correct) {
-                score += 10;
+                combo++;
+                // Bônus por acerto e combo
+                score += (10 * combo);
                 selectedBtn.classList.add('correct-answer');
+                
+                if(combo > 1) {
+                    const badge = document.getElementById('combo-badge');
+                    badge.innerText = `Combo x${combo}`;
+                    badge.style.display = 'block';
+                }
             } else {
+                // PENALIDADE: Perde 7 segundos se errar no modo tempo
+                if(mode === 'time') {
+                    timeLeft = Math.max(0, timeLeft - 7);
+                    statsEl.classList.add('time-penalty');
+                    setTimeout(() => statsEl.classList.remove('time-penalty'), 500);
+                }
+                combo = 0;
+                document.getElementById('combo-badge').style.display = 'none';
                 selectedBtn.classList.add('wrong-answer');
                 buttons.forEach(btn => { if(btn.innerText === correct) btn.classList.add('correct-answer'); });
             }
-            setTimeout(() => { currentIndex++; renderQuestion(); }, 1100);
+            
+            setTimeout(() => { currentIndex++; renderQuestion(); }, 800);
         }
 
         function endGame() {
             clearInterval(timerInterval);
             document.getElementById('modal-score-texto').innerHTML = `Pontuação final: <strong style="color: var(--accent); font-size: 1.5rem;">${score}</strong>`;
             document.getElementById('modal-fim-jogo').style.display = 'flex';
-            setTimeout(() => document.getElementById('player-name').focus(), 100);
         }
 
         function salvarERecarregar() {
@@ -290,14 +342,12 @@
             location.reload();
         }
 
-        /* --- Lógica dos Modais de Reset --- */
         function abrirModalReset() { document.getElementById('modal-reset-ranking').style.display = 'flex'; }
         function fecharModalReset() { document.getElementById('modal-reset-ranking').style.display = 'none'; }
         
         function confirmarResetRanking() {
             localStorage.removeItem('cineflow_ranking');
-            fecharModalReset();
-            loadRanking();
+            location.reload();
         }
 
         function loadRanking() {
@@ -315,16 +365,10 @@
                     </tr>
                 `).join('');
             } else {
-                btnReset.style.display = 'none';
-                table.innerHTML = `<tr><td class="ranking-empty-msg">Nenhum recorde ainda. Que tal ser o primeiro?</td></tr>`;
+                table.innerHTML = `<tr><td class="ranking-empty-msg">Nenhum recorde ainda.</td></tr>`;
             }
         }
 
-        document.getElementById('player-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') salvarERecarregar();
-        });
-
-        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
         window.onload = loadRanking;
     </script>
 </body>
