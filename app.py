@@ -150,12 +150,14 @@ def api_game_questoes():
     o novo sistema de combos e dificuldade elevada.
     """
     todas_questoes = []
-    # Aumentado para 8 páginas aleatórias para maior diversidade
-    paginas_aleatorias = random.sample(range(1, 20), 8) 
+    # Aumentado para buscar de um range de 50 páginas (1000 filmes possíveis) 
+    # para garantir uma gama muito maior e aumentar a dificuldade
+    paginas_aleatorias = random.sample(range(1, 50), 12) 
     
     filmes_pool = []
     for pg in paginas_aleatorias:
         try:
+            # Mantém LANGUAGE (pt-BR) para garantir nomes em português
             res = requests.get(f"{BASE_URL}/movie/popular", 
                                params={"api_key": API_KEY, "language": LANGUAGE, "page": pg})
             if res.status_code == 200:
@@ -163,13 +165,23 @@ def api_game_questoes():
         except:
             continue
 
+    # Remove possíveis duplicatas e embaralha o pool global
     random.shuffle(filmes_pool)
     
+    # Criar lista de títulos para as opções erradas (garantindo que são nomes em PT-BR)
+    todos_titulos_pt = [f['title'] for f in filmes_pool if f.get('title')]
+    
     for filme in filmes_pool:
+        # Pula filmes sem imagem de fundo ou sem título
         if not filme.get('backdrop_path') or not filme.get('title'):
             continue
             
-        outros_titulos = [f['title'] for f in filmes_pool if f['id'] != filme['id']]
+        # Filtra para não repetir o título correto nas opções erradas
+        outros_titulos = [t for t in todos_titulos_pt if t != filme['title']]
+        
+        if len(outros_titulos) < 3:
+            continue
+            
         opcoes_erradas = random.sample(outros_titulos, 3)
         
         opcoes = opcoes_erradas + [filme['title']]
@@ -182,6 +194,7 @@ def api_game_questoes():
             "opcoes": opcoes
         })
     
+    # Retorna todas as questões geradas com a gama expandida
     return jsonify(todas_questoes)
 
 @app.errorhandler(404)
