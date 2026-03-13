@@ -19,7 +19,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Feedback visual de erro no tempo */
         .time-penalty {
             color: #ff4b4b !important;
             border-color: #ff4b4b !important;
@@ -37,16 +36,14 @@
             background: #000;
         }
 
-        /* Efeito de Dificuldade: Blur Progressivo */
         .game-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
-            filter: blur(25px); /* Começa muito difícil */
+            filter: blur(25px);
         }
 
-        /* Badge de Combo */
         #combo-badge {
             position: absolute;
             top: 15px;
@@ -59,6 +56,21 @@
             display: none;
             z-index: 10;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .hint-display {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: gold;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: none;
+            z-index: 15;
+            border: 1px solid gold;
         }
 
         .game-options-grid {
@@ -98,7 +110,6 @@
             75% { transform: translateX(10px); }
         }
 
-        /* --- Modais --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -190,8 +201,14 @@
         <section id="game-play" style="display: none;">
             <div class="game-img-container">
                 <div id="combo-badge">Combo x1</div>
+                <div id="hint-text" class="hint-display"></div>
                 <img id="movie-guess-img" class="game-img" src="" alt="Qual é o filme?">
             </div>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <button id="btn-hint" onclick="usarDica()" class="btn-nav" style="font-size: 0.8rem; padding: 8px 15px; color: #000;">💡 Dica</button>
+            </div>
+
             <div id="game-options" class="game-options-grid"></div>
         </section>
     </main>
@@ -227,6 +244,7 @@
         let timerInterval;
         let combo = 0;
         let filmesUsados = new Set(); 
+        let dicaUsadaNaQuestao = false; // NOVA VARIÁVEL
 
         async function carregarNovasQuestoes() {
             const res = await fetch('/api/game/questoes');
@@ -268,14 +286,17 @@
             const q = questions[currentIndex];
             filmesUsados.add(q.id);
             
+            // RESET DA DICA
+            dicaUsadaNaQuestao = false;
+            document.getElementById('hint-text').style.display = 'none';
+            document.getElementById('btn-hint').style.opacity = '1';
+            document.getElementById('btn-hint').disabled = false;
+
             const imgElement = document.getElementById('movie-guess-img');
-            
-            // Reset do Blur para cada nova questão
             imgElement.style.transition = 'none';
             imgElement.style.filter = 'blur(25px)';
             imgElement.src = q.imagem;
             
-            // Inicia o foco gradual (5 segundos para ficar nítido)
             setTimeout(() => {
                 imgElement.style.transition = 'filter 5.5s linear';
                 imgElement.style.filter = 'blur(0px)';
@@ -295,6 +316,22 @@
             });
         }
 
+        function usarDica() {
+            if(dicaUsadaNaQuestao) return;
+            dicaUsadaNaQuestao = true;
+            const q = questions[currentIndex];
+            const hintEl = document.getElementById('hint-text');
+            hintEl.innerText = q.dica;
+            hintEl.style.display = 'block';
+            
+            // Penalidade visual e desabilita botão
+            document.getElementById('btn-hint').style.opacity = '0.5';
+            document.getElementById('btn-hint').disabled = true;
+            
+            // Ajuda visual extra: reduz o blur na hora
+            document.getElementById('movie-guess-img').style.filter = 'blur(8px)';
+        }
+
         function checkAnswer(selectedBtn, chosen, correct) {
             const buttons = document.querySelectorAll('.btn-quiz-option');
             const statsEl = document.getElementById('stats');
@@ -302,8 +339,11 @@
             
             if(chosen === correct) {
                 combo++;
-                // Bônus por acerto e combo
-                score += (10 * combo);
+                // LÓGICA DE PONTOS COM PENALIDADE DE DICA
+                let pontosGanhos = (10 * combo);
+                if (dicaUsadaNaQuestao) pontosGanhos = Math.floor(pontosGanhos / 2);
+                
+                score += pontosGanhos;
                 selectedBtn.classList.add('correct-answer');
                 
                 if(combo > 1) {
@@ -312,7 +352,6 @@
                     badge.style.display = 'block';
                 }
             } else {
-                // PENALIDADE: Perde 7 segundos se errar no modo tempo
                 if(mode === 'time') {
                     timeLeft = Math.max(0, timeLeft - 7);
                     statsEl.classList.add('time-penalty');
