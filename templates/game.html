@@ -173,6 +173,9 @@
     <header class="container">
         <div class="header-top">
             <a href="/" style="text-decoration: none; color: inherit;"><h1>CineFlow <span style="color:var(--accent)">GAME</span></h1></a>
+            <div class="header-controls">
+                <button id="themeButton" class="theme-toggle">☀️ Modo Claro</button>
+            </div>
             <div id="stats" class="timer-badge">Menu</div>
         </div>
     </header>
@@ -236,6 +239,21 @@
     </div>
 
     <script>
+
+        // --- Lógica de Tema ---
+        const themeButton = document.getElementById('themeButton');
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeButton.innerText = "🌙 Modo Escuro";
+        }
+        themeButton.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            let theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+            themeButton.innerText = theme === 'light' ? "🌙 Modo Escuro" : "☀️ Modo Claro";
+            localStorage.setItem('theme', theme);
+        });
+
         let mode = ''; 
         let questions = [];
         let currentIndex = 0;
